@@ -1,0 +1,158 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 6b24687..914ad35 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -44,18 +44,23 @@ add_subdirectory(externals/JUCE "${CMAKE_CURRENT_BINARY_DIR}/juce-bin" EXCLUDE_F
+ add_subdirectory(externals/tensorflow/tensorflow/lite "${CMAKE_CURRENT_BINARY_DIR}/tensorflow-lite-bin" EXCLUDE_FROM_ALL)
+ # TFLite CXX std needs to be explicitly set to C++20 in Visual Studio.
+ target_compile_features(tensorflow-lite PUBLIC ${DDSP_CXX_STD})
++if(APPLE)
+ target_compile_options(tensorflow-lite PUBLIC -stdlib=libc++)
++endif()
+ 
+ # ------------------------- DDSP Binary Assets ------------------------ #
+ 
+ juce_add_binary_data(Assets SOURCES ${DDSP_ASSETS})
++if("${CMAKE_SYSTEM}" MATCHES "Linux")
++    set_target_properties(Assets PROPERTIES POSITION_INDEPENDENT_CODE ON)
++endif()
+ 
+ # ---------------------------- DDSP Effect ---------------------------- #
+ 
+ set(DDSP_EFFECT_TARGET DDSPEffect)
+ 
+ juce_add_plugin(${DDSP_EFFECT_TARGET}
+-    PRODUCT_NAME "DDSP Effect"
++    PRODUCT_NAME "DDSPEffect"
+     COMPANY_NAME ${DDSP_COMPANY_NAME}
+     MICROPHONE_PERMISSION_ENABLED TRUE
+     IS_SYNTH FALSE
+@@ -93,7 +98,7 @@ endif()
+ set(DDSP_SYNTH_TARGET DDSPSynth)
+ 
+ juce_add_plugin(${DDSP_SYNTH_TARGET}
+-    PRODUCT_NAME "DDSP Synth"
++    PRODUCT_NAME "DDSPSynth"
+     COMPANY_NAME ${DDSP_COMPANY_NAME}
+     IS_SYNTH TRUE
+     NEEDS_MIDI_INPUT TRUE
+@@ -127,6 +132,8 @@ endif()
+ 
+ # ----------------------- DDSP Unit Test Runner ----------------------- #
+ 
++if(false) # we would enable this if it compiles on Android. Currently it doesn't.
++
+ enable_testing()
+ 
+ set(DDSP_UNIT_TEST_TARGET DDSPUnitTestRunner)
+@@ -161,4 +168,79 @@ set_target_properties(${DDSP_UNIT_TEST_TARGET} PROPERTIES XCODE_GENERATE_SCHEME
+ include(GoogleTest)
+ gtest_discover_tests(${DDSP_UNIT_TEST_TARGET})
+ 
++endif()
++
++# begin AAP specifics -->
++
++if("${AAP_DIR}" STREQUAL "")
++    set(AAP_DIR "../aap-core")
++endif()
++if("${AAP_JUCE_DIR}" STREQUAL "")
++    set(AAP_JUCE_DIR "../aap-juce")
++endif()
++
++juce_add_modules(${AAP_JUCE_DIR}/aap-modules/aap_audio_processors)
++add_definitions([[-DJUCE_PUSH_NOTIFICATIONS_ACTIVITY="com/rmsl/juce/JuceActivity"]])
++
++message("AAP_DIR: ${AAP_DIR}")
++message("AAP_JUCE_DIR: ${AAP_JUCE_DIR}")
++
++function(ADD_AAP_PLUGIN APP_NAME)
++
++# They are needed in desktop too, for generate-aap-metadata.
++target_include_directories(${APP_NAME} PUBLIC
++        "${AAP_DIR}/include"
++        # somehow JuceHeader.h fails to include aap modules only in ddsp-vst,
++        # even if we put all this cmake fragment is placed before juce_generate_juce_header().
++        # I don't want to be bothered by any old JUCE behavior so I end up to put it here.
++        "${AAP_JUCE_DIR}/aap-modules"
++        )
++
++target_compile_definitions(${APP_NAME} PUBLIC
++        #JUCEAAP_HAVE_AUDIO_PLAYHEAD_NEW_POSITION_INFO=1
++        )
++
++if (ANDROID)
++    # dependencies
++    find_library(log "log")
++    find_library(android "android")
++    find_library(glesv2 "GLESv2")
++    find_library(egl "EGL")
++    set(cpufeatures_lib "cpufeatures")
++    #set(oboe_lib "oboe")
++
++    target_compile_definitions(${APP_NAME} PUBLIC
++            JUCE_PUSH_NOTIFICATIONS=1
++            JUCE_DONT_AUTO_OPEN_MIDI_DEVICES_ON_MOBILE=1
++            )
++
++    target_include_directories(${APP_NAME} PRIVATE
++            "${ANDROID_NDK}/sources/android/cpufeatures"
++            "${OBOE_DIR}/include"
++            )
++else ()
++    add_executable(aap-metadata-generator-${APP_NAME}
++            ${AAP_JUCE_DIR}/tools/aap-metadata-generator.cpp
++    )
++
++    target_link_libraries(aap-metadata-generator-${APP_NAME}
++            Assets
++            ${DDSP_SYNTH_TARGET}
++    )
++endif (ANDROID)
++
++target_link_libraries(${APP_NAME}
++        PRIVATE
++        aap_audio_processors
++        )
++# <-- end Android specifics
++
++endfunction()
++
++ADD_AAP_PLUGIN(${DDSP_EFFECT_TARGET})
++ADD_AAP_PLUGIN(${DDSP_SYNTH_TARGET})
++
++# <-- end AAP specifics
++
++
+ # --------------------------------------------------------------------- #
+Submodule externals/tensorflow contains modified content
+diff --git a/externals/tensorflow/tensorflow/lite/CMakeLists.txt b/externals/tensorflow/tensorflow/lite/CMakeLists.txt
+index 40f9485b5..42fa22c1b 100644
+--- a/externals/tensorflow/tensorflow/lite/CMakeLists.txt
++++ b/externals/tensorflow/tensorflow/lite/CMakeLists.txt
+@@ -532,6 +532,7 @@ if(TFLITE_KERNEL_TEST)
+ endif()
+ 
+ # The benchmark tool.
++if(false)
+ add_subdirectory(${TFLITE_SOURCE_DIR}/tools/benchmark)
+ 
+ # The label_image example.
+@@ -562,3 +563,4 @@ target_compile_options(_pywrap_tensorflow_interpreter_wrapper
+   PUBLIC ${TFLITE_TARGET_PUBLIC_OPTIONS}
+   PRIVATE ${TFLITE_TARGET_PRIVATE_OPTIONS}
+ )
++endif()
+diff --git a/src/audio/tflite/PredictControlsModel.cpp b/src/audio/tflite/PredictControlsModel.cpp
+index 4dcf3a5..00061ae 100644
+--- a/src/audio/tflite/PredictControlsModel.cpp
++++ b/src/audio/tflite/PredictControlsModel.cpp
+@@ -96,7 +96,7 @@ void PredictControlsModel::call (const AudioFeatures& input, SynthesisControls&
+ 
+     for (int i = 0; i < kHarmonicsSize; ++i)
+     {
+-        if (isnan (output.harmonics[i]))
++        if (std::isnan (output.harmonics[i]))
+         {
+             DBG ("is_nan");
+             output.harmonics[i] = 0.f;

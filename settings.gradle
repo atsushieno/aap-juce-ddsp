@@ -1,0 +1,2 @@
+rootProject.name = 'ddsp-vst'
+include ':app'
