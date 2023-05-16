@@ -1,5 +1,5 @@
 <devices>
-    <device name="Dexed" manufacturer="androidaudioplugin.org" product="Dexed">
+    <device name="DDSPSynth" manufacturer="androidaudioplugin.org" product="DDSP-VST">
         <input-port name="input" />
     </device>
 </devices>

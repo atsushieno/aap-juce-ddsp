@@ -8,7 +8,7 @@ class Java
 {
     companion object {
         init {
-            System.loadLibrary("DDSPEffect_Standalone")
+            System.loadLibrary("DDSPSynth_Standalone")
         }
         
         @JvmStatic

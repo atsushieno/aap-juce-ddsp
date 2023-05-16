@@ -6,4 +6,4 @@
 	url = https://github.com/atsushieno/aap-juce.git
 [submodule "external/ddsp-vst"]
 	path = external/ddsp-vst
-	url = https://github.com/magenta/ddsp-vst.git
+	url = https://github.com/tank-trax/ddsp-vst.git

@@ -1,24 +1,8 @@
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 6b24687..914ad35 100644
+index 7b92e52..f226d70 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -44,18 +44,23 @@ add_subdirectory(externals/JUCE "${CMAKE_CURRENT_BINARY_DIR}/juce-bin" EXCLUDE_F
- add_subdirectory(externals/tensorflow/tensorflow/lite "${CMAKE_CURRENT_BINARY_DIR}/tensorflow-lite-bin" EXCLUDE_FROM_ALL)
- # TFLite CXX std needs to be explicitly set to C++20 in Visual Studio.
- target_compile_features(tensorflow-lite PUBLIC ${DDSP_CXX_STD})
-+if(APPLE)
- target_compile_options(tensorflow-lite PUBLIC -stdlib=libc++)
-+endif()
- 
- # ------------------------- DDSP Binary Assets ------------------------ #
- 
- juce_add_binary_data(Assets SOURCES ${DDSP_ASSETS})
-+if("${CMAKE_SYSTEM}" MATCHES "Linux")
-+    set_target_properties(Assets PROPERTIES POSITION_INDEPENDENT_CODE ON)
-+endif()
- 
- # ---------------------------- DDSP Effect ---------------------------- #
- 
+@@ -61,7 +61,7 @@ endif()
  set(DDSP_EFFECT_TARGET DDSPEffect)
  
  juce_add_plugin(${DDSP_EFFECT_TARGET}
@@ -27,7 +11,7 @@ index 6b24687..914ad35 100644
      COMPANY_NAME ${DDSP_COMPANY_NAME}
      MICROPHONE_PERMISSION_ENABLED TRUE
      IS_SYNTH FALSE
-@@ -93,7 +98,7 @@ endif()
+@@ -99,7 +99,7 @@ endif()
  set(DDSP_SYNTH_TARGET DDSPSynth)
  
  juce_add_plugin(${DDSP_SYNTH_TARGET}
@@ -36,7 +20,7 @@ index 6b24687..914ad35 100644
      COMPANY_NAME ${DDSP_COMPANY_NAME}
      IS_SYNTH TRUE
      NEEDS_MIDI_INPUT TRUE
-@@ -127,6 +132,8 @@ endif()
+@@ -133,6 +133,8 @@ endif()
  
  # ----------------------- DDSP Unit Test Runner ----------------------- #
  
@@ -45,7 +29,7 @@ index 6b24687..914ad35 100644
  enable_testing()
  
  set(DDSP_UNIT_TEST_TARGET DDSPUnitTestRunner)
-@@ -161,4 +168,79 @@ set_target_properties(${DDSP_UNIT_TEST_TARGET} PROPERTIES XCODE_GENERATE_SCHEME
+@@ -167,4 +169,79 @@ set_target_properties(${DDSP_UNIT_TEST_TARGET} PROPERTIES XCODE_GENERATE_SCHEME
  include(GoogleTest)
  gtest_discover_tests(${DDSP_UNIT_TEST_TARGET})
  
@@ -127,7 +111,7 @@ index 6b24687..914ad35 100644
  # --------------------------------------------------------------------- #
 Submodule externals/tensorflow contains modified content
 diff --git a/externals/tensorflow/tensorflow/lite/CMakeLists.txt b/externals/tensorflow/tensorflow/lite/CMakeLists.txt
-index 40f9485b5..42fa22c1b 100644
+index 40f9485b5d6..42fa22c1bdc 100644
 --- a/externals/tensorflow/tensorflow/lite/CMakeLists.txt
 +++ b/externals/tensorflow/tensorflow/lite/CMakeLists.txt
 @@ -532,6 +532,7 @@ if(TFLITE_KERNEL_TEST)
@@ -143,16 +127,3 @@ index 40f9485b5..42fa22c1b 100644
    PRIVATE ${TFLITE_TARGET_PRIVATE_OPTIONS}
  )
 +endif()
-diff --git a/src/audio/tflite/PredictControlsModel.cpp b/src/audio/tflite/PredictControlsModel.cpp
-index 4dcf3a5..00061ae 100644
---- a/src/audio/tflite/PredictControlsModel.cpp
-+++ b/src/audio/tflite/PredictControlsModel.cpp
-@@ -96,7 +96,7 @@ void PredictControlsModel::call (const AudioFeatures& input, SynthesisControls&
- 
-     for (int i = 0; i < kHarmonicsSize; ++i)
-     {
--        if (isnan (output.harmonics[i]))
-+        if (std::isnan (output.harmonics[i]))
-         {
-             DBG ("is_nan");
-             output.harmonics[i] = 0.f;
