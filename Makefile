@@ -35,4 +35,4 @@ include $(AAP_JUCE_DIR)/Makefile.cmake-common
 repo-init: external/ddsp-vst/app-make.stamp
 
 external/ddsp-vst/app-make.stamp:
-	cd external/ddsp-vst && ./repo-init.sh && touch app.stamp
+	cd external/ddsp-vst && bash ./repo-init.sh && touch app.stamp
