@@ -2,43 +2,18 @@
 
 <plugins xmlns="urn:org.androidaudioplugin.core">
   <plugin name="DDSPSynth" category="Instrument" author="Magenta" developer="Magenta"
-          unique-id="juceaap:52616e62" library="libDDSPSynth_Standalone.so"
-          entrypoint="GetJuceAAPFactoryStandalone">
+      unique-id="juceaap:52616e62" library="libDDSPSynth_Standalone.so"
+      entrypoint="GetJuceAAPFactoryStandalone"
+      gui:ui-view-factory="org.androidaudioplugin.ui.compose.ComposeAudioPluginViewFactory"
+      xmlns:gui="urn://androidaudioplugin.org/extensions/gui" >>
     <extensions>
       <extension uri="urn://androidaudioplugin.org/extensions/plugin-info/v2"/>
+      <extension uri="urn://androidaudioplugin.org/extensions/parameters/v2.1"/>
       <extension uri="urn://androidaudioplugin.org/extensions/presets/v2"/>
       <extension uri="urn://androidaudioplugin.org/extensions/state/v2"/>
       <extension uri="urn://androidaudioplugin.org/extensions/midi2/v2"/>
       <extension uri="urn://androidaudioplugin.org/extensions/gui/v2"/>
     </extensions>
-    <parameters xmlns="urn://androidaudioplugin.org/extensions/parameters">
-      <parameter id="0" name="Input Gain" direction="input" minimum="-0.5" maximum="0.5"
-                 default="1.0" content="other"/>
-      <parameter id="1" name="Input Pitch" direction="input" minimum="-0.5" maximum="0.5"
-                 default="1.0" content="other"/>
-      <parameter id="2" name="Pitch Shift" direction="input" minimum="-24.0" maximum="24.0"
-                 default="0.5104166865348816" content="other"/>
-      <parameter id="3" name="Harmonics" direction="input" minimum="0.0" maximum="1.0"
-                 default="1.0" content="other"/>
-      <parameter id="4" name="Noise" direction="input" minimum="0.0" maximum="1.0"
-                 default="1.0" content="other"/>
-      <parameter id="5" name="Output Gain" direction="input" minimum="-60.0" maximum="0.0"
-                 default="1.0" content="other"/>
-      <parameter id="6" name="Reverb Size" direction="input" minimum="0.0" maximum="1.0"
-                 default="0.3999999761581421" content="other"/>
-      <parameter id="7" name="Reverb Damp" direction="input" minimum="0.0" maximum="1.0"
-                 default="0.09999999403953552" content="other"/>
-      <parameter id="8" name="Reverb Wet" direction="input" minimum="0.0" maximum="1.0"
-                 default="0.0" content="other"/>
-      <parameter id="9" name="Attack" direction="input" minimum="0.1000000014901161"
-                 maximum="3.0" default="0.0" content="other"/>
-      <parameter id="10" name="Decay" direction="input" minimum="0.1000000014901161"
-                 maximum="3.0" default="0.0" content="other"/>
-      <parameter id="11" name="Sustain" direction="input" minimum="0.0" maximum="1.0"
-                 default="1.0" content="other"/>
-      <parameter id="12" name="Release" direction="input" minimum="0.1000000014901161"
-                 maximum="5.0" default="0.02540607936680317" content="other"/>
-    </parameters>
     <ports>
       <port direction="output" content="audio" name="Left"/>
       <port direction="output" content="audio" name="Right"/>
