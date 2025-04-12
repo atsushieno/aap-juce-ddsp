@@ -8,12 +8,11 @@ kotlin {
 }
 
 android {
-    namespace = "org.androidaudioplugin.ports.juce.dddsp_vst"
-    compileSdk = 33
+    namespace = "org.androidaudioplugin.ports.juce.ddsp_vst"
+    compileSdk = libs.versions.android.compileSdk.get().toInteger()
 
     defaultConfig {
-        minSdk = 29
-        targetSdk = 33
+        minSdk = libs.versions.android.minSdk.get().toInteger()
         ndk { // reducing build time for viable CI workflow...
             abiFilters "x86_64", "arm64-v8a"
         }
@@ -43,6 +42,7 @@ android {
         implementation libs.aap.midi.device.service
         implementation libs.aap.ui.web
         implementation libs.aap.ui.compose
+        implementation libs.aap.ui.compose.app
     }
 
     externalNativeBuild {
